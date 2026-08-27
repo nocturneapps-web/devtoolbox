@@ -249,12 +249,6 @@ function encodeBase64(value: string): string {
   );
 }
 
-function decodeBase64(value: string): string {
-  return decodeURIComponent(
-    escape(atob(value))
-  );
-}
-
 function ToolPage({
   tool,
   input,
