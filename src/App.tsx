@@ -1,4 +1,8 @@
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Braces,
   Check,
@@ -478,6 +482,76 @@ function App() {
     tools.find(
       (tool) => tool.id === selectedTool
     ) ?? tools[0];
+
+   useEffect(() => {
+  const seo = {
+    "json-to-typescript": {
+      title:
+        "JSON to TypeScript Converter — Free Online Tool | DevToolbox",
+      description:
+        "Convert JSON to TypeScript interfaces instantly. Free online JSON to TypeScript converter. Runs entirely in your browser.",
+    },
+
+    json: {
+      title:
+        "JSON Formatter & Validator — Free Online Tool | DevToolbox",
+      description:
+        "Format, validate and beautify JSON instantly with this free online JSON formatter.",
+    },
+
+    jwt: {
+      title:
+        "JWT Decoder — Decode JWT Tokens Online | DevToolbox",
+      description:
+        "Decode JWT headers and payloads instantly. Everything runs locally in your browser.",
+    },
+
+    base64: {
+      title:
+        "Base64 Encoder & Decoder — Free Online Tool | DevToolbox",
+      description:
+        "Encode and decode Base64 strings instantly with this free online developer tool.",
+    },
+
+    url: {
+      title:
+        "URL Encoder & Decoder — Free Online Tool | DevToolbox",
+      description:
+        "Encode and decode URLs and query strings instantly.",
+    },
+
+    uuid: {
+      title:
+        "UUID Generator — Generate Free UUIDs | DevToolbox",
+      description:
+        "Generate random UUIDs instantly. Free online UUID v4 generator.",
+    },
+
+    regex: {
+      title:
+        "Regex Tester — Test Regular Expressions Online | DevToolbox",
+      description:
+        "Test regular expressions against text with this free online regex tester.",
+    },
+  } as const;
+
+  const currentSeo =
+    seo[activeTool.id as keyof typeof seo];
+
+  document.title = currentSeo.title;
+
+  const description =
+    document.querySelector(
+      'meta[name="description"]'
+    );
+
+  if (description) {
+    description.setAttribute(
+      "content",
+      currentSeo.description
+    );
+  }
+}, [activeTool.id]);
 
   return (
     <>
