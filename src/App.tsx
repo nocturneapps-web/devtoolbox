@@ -8,7 +8,6 @@ import {
   Link,
   LockKeyhole,
   Regex,
-  Search,
   Sparkles,
   Wand2,
 } from "lucide-react";
@@ -18,50 +17,65 @@ type Tool = {
   name: string;
   description: string;
   icon: typeof Braces;
+  path: string;
 };
 
 const tools: Tool[] = [
   {
     id: "json-to-typescript",
     name: "JSON → TypeScript",
-    description: "Generate TypeScript interfaces from JSON instantly.",
+    description:
+      "Generate TypeScript interfaces from JSON instantly.",
     icon: Braces,
+    path: "/json-to-typescript",
   },
   {
     id: "json",
     name: "JSON Formatter",
-    description: "Format and validate JSON instantly.",
+    description:
+      "Format and validate JSON instantly.",
     icon: Braces,
+    path: "/json-formatter",
   },
   {
     id: "jwt",
     name: "JWT Decoder",
-    description: "Decode JWT headers and payloads locally.",
+    description:
+      "Decode JWT headers and payloads locally.",
     icon: KeyRound,
+    path: "/jwt-decoder",
   },
   {
     id: "base64",
-    name: "Base64",
-    description: "Encode and decode Base64 strings.",
+    name: "Base64 Encoder",
+    description:
+      "Encode and decode Base64 strings.",
     icon: LockKeyhole,
+    path: "/base64",
   },
   {
     id: "url",
     name: "URL Encoder",
-    description: "Encode and decode URLs and query strings.",
+    description:
+      "Encode and decode URLs and query strings.",
     icon: Link,
+    path: "/url-encoder",
   },
   {
     id: "uuid",
     name: "UUID Generator",
-    description: "Generate random UUIDs instantly.",
+    description:
+      "Generate random UUIDs instantly.",
     icon: Hash,
+    path: "/uuid-generator",
   },
   {
     id: "regex",
     name: "Regex Tester",
-    description: "Test regular expressions against text.",
+    description:
+      "Test regular expressions against text.",
     icon: Regex,
+    path: "/regex-tester",
   },
 ];
 
@@ -78,13 +92,15 @@ function jsonToTypeScript(
   rootName = "Root"
 ): string {
   const parsed = JSON.parse(value);
+
   const interfaces: string[] = [];
   const generatedNames = new Set<string>();
 
   const pascalCase = (name: string) =>
     name
-      .replace(/[^a-zA-Z0-9]+(.)/g, (_, char) =>
-        char.toUpperCase()
+      .replace(
+        /[^a-zA-Z0-9]+(.)/g,
+        (_, char) => char.toUpperCase()
       )
       .replace(/^./, (char) => char.toUpperCase());
 
@@ -103,24 +119,28 @@ function jsonToTypeScript(
     }
 
     const finalName = `${baseName}${index}`;
+
     generatedNames.add(finalName);
 
     return finalName;
   };
 
-  const getType = (value: unknown, name: string): string => {
-    if (value === null) {
+  const getType = (
+    currentValue: unknown,
+    name: string
+  ): string => {
+    if (currentValue === null) {
       return "null";
     }
 
-    if (Array.isArray(value)) {
-      if (value.length === 0) {
+    if (Array.isArray(currentValue)) {
+      if (currentValue.length === 0) {
         return "unknown[]";
       }
 
       const types = [
         ...new Set(
-          value.map((item) => {
+          currentValue.map((item) => {
             if (
               typeof item === "object" &&
               item !== null &&
@@ -141,18 +161,23 @@ function jsonToTypeScript(
       return `(${types.join(" | ")})[]`;
     }
 
-    if (typeof value === "object") {
+    if (
+      typeof currentValue === "object" &&
+      currentValue !== null
+    ) {
       const interfaceName = createInterfaceName(name);
 
-      const fields = Object.entries(value)
+      const fields = Object.entries(currentValue)
         .map(([key, val]) => {
-          const safeKey = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(
-            key
-          )
-            ? key
-            : `"${key}"`;
+          const safeKey =
+            /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)
+              ? key
+              : `"${key}"`;
 
-          const type = getType(val, pascalCase(key));
+          const type = getType(
+            val,
+            pascalCase(key)
+          );
 
           return `  ${safeKey}: ${type};`;
         })
@@ -165,7 +190,7 @@ function jsonToTypeScript(
       return interfaceName;
     }
 
-    return getPrimitiveType(value);
+    return getPrimitiveType(currentValue);
   };
 
   getType(parsed, rootName);
@@ -173,13 +198,14 @@ function jsonToTypeScript(
   return interfaces.reverse().join("\n\n");
 }
 
-function decodeJwtPart(value: string) {
+function decodeJwtPart(value: string): string {
   const normalized = value
     .replace(/-/g, "+")
     .replace(/_/g, "/");
 
   const padded =
-    normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+    normalized +
+    "=".repeat((4 - (normalized.length % 4)) % 4);
 
   const decoded = atob(padded);
 
@@ -191,21 +217,42 @@ function decodeJwtPart(value: string) {
   return new TextDecoder().decode(bytes);
 }
 
-function decodeJwt(token: string) {
+function decodeJwt(token: string): string {
   const parts = token.trim().split(".");
 
   if (parts.length !== 3) {
     throw new Error("Invalid JWT");
   }
 
-  const header = JSON.parse(decodeJwtPart(parts[0]));
-  const payload = JSON.parse(decodeJwtPart(parts[1]));
+  const header = JSON.parse(
+    decodeJwtPart(parts[0])
+  );
+
+  const payload = JSON.parse(
+    decodeJwtPart(parts[1])
+  );
 
   return `HEADER\n${JSON.stringify(
     header,
     null,
     2
-  )}\n\nPAYLOAD\n${JSON.stringify(payload, null, 2)}`;
+  )}\n\nPAYLOAD\n${JSON.stringify(
+    payload,
+    null,
+    2
+  )}`;
+}
+
+function encodeBase64(value: string): string {
+  return btoa(
+    unescape(encodeURIComponent(value))
+  );
+}
+
+function decodeBase64(value: string): string {
+  return decodeURIComponent(
+    escape(atob(value))
+  );
 }
 
 function ToolPage({
@@ -226,13 +273,17 @@ function ToolPage({
           return jsonToTypeScript(input);
 
         case "json":
-          return JSON.stringify(JSON.parse(input), null, 2);
+          return JSON.stringify(
+            JSON.parse(input),
+            null,
+            2
+          );
 
         case "jwt":
           return decodeJwt(input);
 
         case "base64":
-          return btoa(unescape(encodeURIComponent(input)));
+          return encodeBase64(input);
 
         case "url":
           return encodeURIComponent(input);
@@ -249,20 +300,23 @@ function ToolPage({
         default:
           return input;
       }
-    } catch (error) {
-      if (tool.id === "json-to-typescript") {
-        return "Invalid JSON. Please check your input.";
-      }
+    } catch {
+      switch (tool.id) {
+        case "json-to-typescript":
+          return "Invalid JSON. Please check your input.";
 
-      if (tool.id === "json") {
-        return "Invalid JSON.";
-      }
+        case "json":
+          return "Invalid JSON.";
 
-      if (tool.id === "jwt") {
-        return "Invalid JWT token.";
-      }
+        case "jwt":
+          return "Invalid JWT token.";
 
-      return "Unable to process input.";
+        case "base64":
+          return "Invalid Base64 string.";
+
+        default:
+          return "Unable to process input.";
+      }
     }
   }, [input, tool.id]);
 
@@ -284,13 +338,37 @@ function ToolPage({
     setInput("");
   }
 
+  function downloadOutput() {
+    const blob = new Blob([output], {
+      type:
+        tool.id === "json-to-typescript"
+          ? "text/plain"
+          : "text/plain",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+      tool.id === "json-to-typescript"
+        ? "types.ts"
+        : "devtoolbox-output.txt";
+
+    link.click();
+
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="tool-page">
       <div className="tool-header">
         <div>
           <div className="tool-badge">
             <tool.icon size={16} />
-            Developer Tool
+            Free Developer Tool
           </div>
 
           <h1>{tool.name}</h1>
@@ -323,15 +401,21 @@ function ToolPage({
           <div className="editor-header">
             <span>Output</span>
 
-            <button onClick={copyOutput}>
-              {copied ? (
-                <Check size={15} />
-              ) : (
-                <Copy size={15} />
-              )}
+            <div className="editor-actions">
+              <button onClick={copyOutput}>
+                {copied ? (
+                  <Check size={15} />
+                ) : (
+                  <Copy size={15} />
+                )}
 
-              {copied ? "Copied" : "Copy"}
-            </button>
+                {copied ? "Copied" : "Copy"}
+              </button>
+
+              <button onClick={downloadOutput}>
+                Download
+              </button>
+            </div>
           </div>
 
           <pre>{output}</pre>
@@ -342,11 +426,20 @@ function ToolPage({
 }
 
 function App() {
-  const [selectedTool, setSelectedTool] = useState(
-    "json-to-typescript"
-  );
+  const currentPath =
+    window.location.pathname.replace(/\/$/, "") || "/";
 
-  const [input, setInput] = useState(`{
+  const currentTool =
+    tools.find(
+      (tool) => tool.path === currentPath
+    ) ?? tools[0];
+
+  const [selectedTool, setSelectedTool] =
+    useState(currentTool.id);
+
+  const [input, setInput] = useState(
+    currentTool.id === "json-to-typescript"
+      ? `{
   "id": 123,
   "name": "Ghost",
   "active": true,
@@ -354,16 +447,20 @@ function App() {
     "name": "Tobias Forge",
     "albums": 6
   }
-}`);
+}`
+      : ""
+  );
 
-  const tool =
-    tools.find((item) => item.id === selectedTool) ??
-    tools[0];
+  function selectTool(tool: Tool) {
+    setSelectedTool(tool.id);
 
-  function selectTool(toolId: string) {
-    setSelectedTool(toolId);
+    window.history.pushState(
+      {},
+      "",
+      tool.path
+    );
 
-    if (toolId === "json-to-typescript") {
+    if (tool.id === "json-to-typescript") {
       setInput(`{
   "id": 123,
   "name": "Ghost",
@@ -373,11 +470,20 @@ function App() {
     "albums": 6
   }
 }`);
-      return;
+    } else {
+      setInput("");
     }
 
-    setInput("");
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
+
+  const activeTool =
+    tools.find(
+      (tool) => tool.id === selectedTool
+    ) ?? tools[0];
 
   return (
     <>
@@ -427,6 +533,10 @@ function App() {
           border-bottom: 1px solid #27272a;
 
           background: #09090b;
+
+          position: sticky;
+          top: 0;
+          z-index: 20;
         }
 
         .logo {
@@ -468,10 +578,6 @@ function App() {
           padding: 8px 14px;
 
           cursor: pointer;
-
-          transition:
-            background 0.15s ease,
-            border-color 0.15s ease;
         }
 
         .pro-button:hover {
@@ -643,19 +749,27 @@ function App() {
         }
 
         .editor-header {
-          height: 46px;
+          min-height: 46px;
 
           display: flex;
           align-items: center;
           justify-content: space-between;
 
-          padding: 0 14px;
+          gap: 12px;
+
+          padding: 8px 14px;
 
           border-bottom: 1px solid #27272a;
 
           color: #a1a1aa;
 
           font-size: 13px;
+        }
+
+        .editor-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
         }
 
         .editor-header button {
@@ -669,8 +783,6 @@ function App() {
           color: #a1a1aa;
 
           cursor: pointer;
-
-          transition: color 0.15s ease;
         }
 
         .editor-header button:hover {
@@ -783,24 +895,24 @@ function App() {
               Tools
             </div>
 
-            {tools.map((item) => {
-              const Icon = item.icon;
+            {tools.map((tool) => {
+              const Icon = tool.icon;
 
               return (
                 <button
-                  key={item.id}
+                  key={tool.id}
                   className={`tool-button ${
-                    selectedTool === item.id
+                    activeTool.id === tool.id
                       ? "active"
                       : ""
                   }`}
                   onClick={() =>
-                    selectTool(item.id)
+                    selectTool(tool)
                   }
                 >
                   <Icon size={17} />
 
-                  {item.name}
+                  {tool.name}
                 </button>
               );
             })}
@@ -809,7 +921,7 @@ function App() {
           <main className="content">
             <section className="hero">
               <div className="hero-badge">
-                <Search size={14} />
+                <Sparkles size={14} />
                 Free developer tools
               </div>
 
@@ -827,7 +939,7 @@ function App() {
             </section>
 
             <ToolPage
-              tool={tool}
+              tool={activeTool}
               input={input}
               setInput={setInput}
             />
