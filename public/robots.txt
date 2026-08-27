@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://devtoolbox.appnocturne.workers.dev/sitemap.xml
