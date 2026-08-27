@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Braces,
   Check,
@@ -12,6 +8,7 @@ import {
   Link,
   LockKeyhole,
   Regex,
+  ShieldCheck,
   Sparkles,
   Wand2,
 } from "lucide-react";
@@ -40,6 +37,14 @@ const tools: Tool[] = [
       "Format and validate JSON instantly.",
     icon: Braces,
     path: "/json-formatter",
+  },
+  {
+    id: "json-validator",
+    name: "JSON Validator",
+    description:
+      "Check whether your JSON is valid instantly.",
+    icon: ShieldCheck,
+    path: "/json-validator",
   },
   {
     id: "jwt",
@@ -83,12 +88,87 @@ const tools: Tool[] = [
   },
 ];
 
+type SeoData = {
+  title: string;
+  description: string;
+};
+
+const seo: Record<string, SeoData> = {
+  "json-to-typescript": {
+    title:
+      "JSON to TypeScript Converter — Free Online Tool | DevToolbox",
+    description:
+      "Convert JSON to TypeScript interfaces instantly. Free online JSON to TypeScript converter. Runs entirely in your browser.",
+  },
+
+  json: {
+    title:
+      "JSON Formatter & Validator — Free Online Tool | DevToolbox",
+    description:
+      "Format, validate and beautify JSON instantly with this free online JSON formatter.",
+  },
+
+  "json-validator": {
+    title:
+      "JSON Validator — Validate JSON Online | DevToolbox",
+    description:
+      "Validate JSON instantly and find syntax errors with this free online JSON validator.",
+  },
+
+  jwt: {
+    title:
+      "JWT Decoder — Decode JWT Tokens Online | DevToolbox",
+    description:
+      "Decode JWT headers and payloads instantly. Everything runs locally in your browser.",
+  },
+
+  base64: {
+    title:
+      "Base64 Encoder & Decoder — Free Online Tool | DevToolbox",
+    description:
+      "Encode and decode Base64 strings instantly with this free online developer tool.",
+  },
+
+  url: {
+    title:
+      "URL Encoder & Decoder — Free Online Tool | DevToolbox",
+    description:
+      "Encode and decode URLs and query strings instantly with this free online URL encoder and decoder.",
+  },
+
+  uuid: {
+    title:
+      "UUID Generator — Generate Free UUIDs | DevToolbox",
+    description:
+      "Generate random UUID v4 identifiers instantly with this free online UUID generator.",
+  },
+
+  regex: {
+    title:
+      "Regex Tester — Test Regular Expressions Online | DevToolbox",
+    description:
+      "Test regular expressions against text with this free online regex tester.",
+  },
+};
+
 function getPrimitiveType(value: unknown): string {
   if (typeof value === "string") return "string";
-  if (typeof value === "number") return "number";
+  if (typeof value === "number") {
+    return Number.isInteger(value) ? "number" : "number";
+  }
   if (typeof value === "boolean") return "boolean";
 
   return "unknown";
+}
+
+function pascalCase(name: string): string {
+  const result = name
+    .replace(/[^a-zA-Z0-9]+(.)/g, (_, char: string) =>
+      char.toUpperCase()
+    )
+    .replace(/^./, (char) => char.toUpperCase());
+
+  return result || "Root";
 }
 
 function jsonToTypeScript(
@@ -100,16 +180,8 @@ function jsonToTypeScript(
   const interfaces: string[] = [];
   const generatedNames = new Set<string>();
 
-  const pascalCase = (name: string) =>
-    name
-      .replace(
-        /[^a-zA-Z0-9]+(.)/g,
-        (_, char) => char.toUpperCase()
-      )
-      .replace(/^./, (char) => char.toUpperCase());
-
-  const createInterfaceName = (name: string) => {
-    const baseName = pascalCase(name) || "Root";
+  const createInterfaceName = (name: string): string => {
+    const baseName = pascalCase(name);
 
     if (!generatedNames.has(baseName)) {
       generatedNames.add(baseName);
@@ -153,6 +225,10 @@ function jsonToTypeScript(
               return getType(item, name);
             }
 
+            if (Array.isArray(item)) {
+              return getType(item, name);
+            }
+
             return getPrimitiveType(item);
           })
         ),
@@ -178,10 +254,7 @@ function jsonToTypeScript(
               ? key
               : `"${key}"`;
 
-          const type = getType(
-            val,
-            pascalCase(key)
-          );
+          const type = getType(val, pascalCase(key));
 
           return `  ${safeKey}: ${type};`;
         })
@@ -248,9 +321,85 @@ function decodeJwt(token: string): string {
 }
 
 function encodeBase64(value: string): string {
-  return btoa(
-    unescape(encodeURIComponent(value))
+  const bytes = new TextEncoder().encode(value);
+
+  let binary = "";
+
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+
+  return btoa(binary);
+}
+
+function decodeBase64(value: string): string {
+  const binary = atob(value.trim());
+
+  const bytes = Uint8Array.from(
+    binary,
+    (char) => char.charCodeAt(0)
   );
+
+  return new TextDecoder().decode(bytes);
+}
+
+function encodeUrl(value: string): string {
+  return encodeURIComponent(value);
+}
+
+function decodeUrl(value: string): string {
+  return decodeURIComponent(value);
+}
+
+function testRegex(value: string): string {
+  const separator = "\n---TEXT---\n";
+
+  const parts = value.split(separator);
+
+  if (parts.length !== 2) {
+    return `Enter your regex and text using this format:
+
+/pattern/flags
+---TEXT---
+Text to test
+
+Example:
+
+/ghost/gi
+---TEXT---
+Ghost is a Swedish rock band.`;
+  }
+
+  const regexInput = parts[0].trim();
+  const text = parts[1];
+
+  let pattern = regexInput;
+  let flags = "";
+
+  if (
+    regexInput.startsWith("/") &&
+    regexInput.lastIndexOf("/") > 0
+  ) {
+    const lastSlash = regexInput.lastIndexOf("/");
+
+    pattern = regexInput.slice(1, lastSlash);
+    flags = regexInput.slice(lastSlash + 1);
+  }
+
+  const regex = new RegExp(pattern, flags);
+
+  const matches = [...text.matchAll(regex)];
+
+  if (matches.length === 0) {
+    return "No matches found.";
+  }
+
+  return matches
+    .map(
+      (match, index) =>
+        `Match ${index + 1}: "${match[0]}" at index ${match.index}`
+    )
+    .join("\n");
 }
 
 function ToolPage({
@@ -277,23 +426,36 @@ function ToolPage({
             2
           );
 
+        case "json-validator":
+          JSON.parse(input);
+
+          return "✓ Valid JSON";
+
         case "jwt":
           return decodeJwt(input);
 
         case "base64":
-          return encodeBase64(input);
+          return input
+            ? `ENCODED\n${encodeBase64(
+                input
+              )}\n\nDECODED\n${decodeBase64(input)}`
+            : "";
 
         case "url":
-          return encodeURIComponent(input);
+          return input
+            ? `ENCODED\n${encodeUrl(
+                input
+              )}\n\nDECODED\n${decodeUrl(input)}`
+            : "";
 
         case "uuid":
           return Array.from(
-            { length: 5 },
+            { length: 10 },
             () => crypto.randomUUID()
           ).join("\n");
 
         case "regex":
-          return "Regex tester coming next.";
+          return testRegex(input);
 
         default:
           return input;
@@ -304,13 +466,22 @@ function ToolPage({
           return "Invalid JSON. Please check your input.";
 
         case "json":
-          return "Invalid JSON.";
+          return "Invalid JSON. Please check your input.";
+
+        case "json-validator":
+          return "✕ Invalid JSON.";
 
         case "jwt":
           return "Invalid JWT token.";
 
         case "base64":
           return "Invalid Base64 string.";
+
+        case "url":
+          return "Unable to decode URL.";
+
+        case "regex":
+          return "Invalid regular expression.";
 
         default:
           return "Unable to process input.";
@@ -328,7 +499,7 @@ function ToolPage({
         setCopied(false);
       }, 1500);
     } catch {
-      // Clipboard unavailable
+      // Clipboard unavailable.
     }
   }
 
@@ -338,10 +509,7 @@ function ToolPage({
 
   function downloadOutput() {
     const blob = new Blob([output], {
-      type:
-        tool.id === "json-to-typescript"
-          ? "text/plain"
-          : "text/plain",
+      type: "text/plain;charset=utf-8",
     });
 
     const url = URL.createObjectURL(blob);
@@ -355,7 +523,11 @@ function ToolPage({
         ? "types.ts"
         : "devtoolbox-output.txt";
 
+    document.body.appendChild(link);
+
     link.click();
+
+    document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
   }
@@ -468,6 +640,11 @@ function App() {
     "albums": 6
   }
 }`);
+    } else if (tool.id === "regex") {
+      setInput(`/ghost/gi
+---TEXT---
+Ghost is a Swedish rock band.
+Ghost was founded in Linköping.`);
     } else {
       setInput("");
     }
@@ -483,75 +660,74 @@ function App() {
       (tool) => tool.id === selectedTool
     ) ?? tools[0];
 
-   useEffect(() => {
-  const seo = {
-    "json-to-typescript": {
-      title:
-        "JSON to TypeScript Converter — Free Online Tool | DevToolbox",
-      description:
-        "Convert JSON to TypeScript interfaces instantly. Free online JSON to TypeScript converter. Runs entirely in your browser.",
-    },
+  useEffect(() => {
+    const currentSeo =
+      seo[activeTool.id];
 
-    json: {
-      title:
-        "JSON Formatter & Validator — Free Online Tool | DevToolbox",
-      description:
-        "Format, validate and beautify JSON instantly with this free online JSON formatter.",
-    },
+    if (!currentSeo) {
+      return;
+    }
 
-    jwt: {
-      title:
-        "JWT Decoder — Decode JWT Tokens Online | DevToolbox",
-      description:
-        "Decode JWT headers and payloads instantly. Everything runs locally in your browser.",
-    },
+    document.title = currentSeo.title;
 
-    base64: {
-      title:
-        "Base64 Encoder & Decoder — Free Online Tool | DevToolbox",
-      description:
-        "Encode and decode Base64 strings instantly with this free online developer tool.",
-    },
+    const description =
+      document.querySelector(
+        'meta[name="description"]'
+      );
 
-    url: {
-      title:
-        "URL Encoder & Decoder — Free Online Tool | DevToolbox",
-      description:
-        "Encode and decode URLs and query strings instantly.",
-    },
+    if (description) {
+      description.setAttribute(
+        "content",
+        currentSeo.description
+      );
+    }
 
-    uuid: {
-      title:
-        "UUID Generator — Generate Free UUIDs | DevToolbox",
-      description:
-        "Generate random UUIDs instantly. Free online UUID v4 generator.",
-    },
+    window.scrollTo({
+      top: 0,
+      behavior: "instant",
+    });
+  }, [activeTool.id]);
 
-    regex: {
-      title:
-        "Regex Tester — Test Regular Expressions Online | DevToolbox",
-      description:
-        "Test regular expressions against text with this free online regex tester.",
-    },
-  } as const;
+  useEffect(() => {
+    function handlePopState() {
+      const path =
+        window.location.pathname.replace(/\/$/, "") ||
+        "/";
 
-  const currentSeo =
-    seo[activeTool.id as keyof typeof seo];
+      const tool =
+        tools.find(
+          (item) => item.path === path
+        ) ?? tools[0];
 
-  document.title = currentSeo.title;
+      setSelectedTool(tool.id);
 
-  const description =
-    document.querySelector(
-      'meta[name="description"]'
-    );
-
-  if (description) {
-    description.setAttribute(
-      "content",
-      currentSeo.description
-    );
+      if (tool.id === "json-to-typescript") {
+        setInput(`{
+  "id": 123,
+  "name": "Ghost",
+  "active": true,
+  "artist": {
+    "name": "Tobias Forge",
+    "albums": 6
   }
-}, [activeTool.id]);
+}`);
+      } else {
+        setInput("");
+      }
+    }
+
+    window.addEventListener(
+      "popstate",
+      handlePopState
+    );
+
+    return () => {
+      window.removeEventListener(
+        "popstate",
+        handlePopState
+      );
+    };
+  }, []);
 
   return (
     <>
