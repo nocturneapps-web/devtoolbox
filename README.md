@@ -1,75 +1,81 @@
-# React + TypeScript + Vite
+# DevToolbox
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Free, fast developer tools that run directly in your browser.
 
-Currently, two official plugins are available:
+**Live:** https://devtoolbox.appnocturne.workers.dev/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+DevToolbox is a collection of simple utilities for developers. No account required and no data upload required.
 
-## React Compiler
+## 🛠 Tools
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### JSON to TypeScript
 
-## Expanding the ESLint configuration
+Convert JSON into TypeScript interfaces instantly.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Try it:**
+https://devtoolbox.appnocturne.workers.dev/json-to-typescript
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### JSON Formatter
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Format and validate JSON directly in your browser.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+**Try it:**
+https://devtoolbox.appnocturne.workers.dev/json-formatter
 
+### JWT Decoder
+
+Decode JWT headers and payloads locally.
+
+**Try it:**
+https://devtoolbox.appnocturne.workers.dev/jwt-decoder
+
+### Base64 Encoder
+
+Encode Base64 strings quickly in your browser.
+
+**Try it:**
+https://devtoolbox.appnocturne.workers.dev/base64
+
+### URL Encoder
+
+Encode URLs and query strings.
+
+**Try it:**
+https://devtoolbox.appnocturne.workers.dev/url-encoder
+
+### UUID Generator
+
+Generate UUIDs instantly.
+
+**Try it:**
+https://devtoolbox.appnocturne.workers.dev/uuid-generator
+
+### Regex Tester
+
+Test regular expressions against text.
+
+**Try it:**
+https://devtoolbox.appnocturne.workers.dev/regex-tester
+
+## 🔒 Privacy
+
+DevToolbox is designed to process your data locally in the browser whenever possible.
+
+Your input does not need to be uploaded to a server for the tools to work.
+
+## 🚀 Development
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Build:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run build
 ```
+
+## License
+
+MIT
